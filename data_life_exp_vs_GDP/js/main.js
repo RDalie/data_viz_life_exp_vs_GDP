@@ -9,6 +9,7 @@ const WIDTH = 600 - MARGIN.LEFT - MARGIN.RIGHT
 const HEIGHT = 400 - MARGIN.TOP -MARGIN.BOTTOM
 let currentYear = 1800
 
+
 const svg = d3.select("#chart-area").append("svg")
 .attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
 .attr("height", HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
@@ -22,6 +23,12 @@ const xAxisGroup = 	g.append("g")
 
 const yAxisGroup = 	g.append("g")
 .attr("class", "y axis")
+
+const timeLabel =g.append("text")
+
+const colorScale = d3.scaleOrdinal()
+.range(d3.schemeSet2 )
+
 
 d3.json("./data/data.json").then(function(data){
 	
@@ -47,6 +54,36 @@ d3.json("./data/data.json").then(function(data){
 		.attr("transform", "rotate(-90)")
 		.text("Life Expectancy")
 
+		timeLabel.attr("y", HEIGHT - 10)
+		.attr("x", WIDTH - 40)
+		.attr("font-size", "40px")
+		.attr("opacity", "0.4")
+		.attr("text-anchor", "middle")
+		.text(String(currentYear))
+		
+		//the legend
+		const legend = g.append("g")
+		.attr('transform', `translate(${WIDTH - 10}, ${HEIGHT - 125})`);
+
+		const continents = ['europe','asia','americas', 'africa']
+
+		continents.forEach((continent, i) => {
+			const legendRow = legend.append('g')
+				.attr("transform", `translate(0, ${i*20})`)
+	
+			legendRow.append("rect")
+				.attr("width", 10)
+				.attr("height", 10)
+				.attr("fill", colorScale(continent))
+	
+			legendRow.append("text")
+				.attr("x", -10)
+				.attr("y", 10)
+				.attr("text-anchor", "end")
+				.style("text-transform","capitalize")
+				.text(continent)
+		}) //the legend
+
 	d3.interval(() => {
 		update(data)
 	}, 80)
@@ -59,6 +96,7 @@ function update(data) {
 
 	currentYear += 1
 	
+
 	data.forEach( function(d){
 		if (Number(d.year) == currentYear) {
 			dataCurrentYear = d.countries
@@ -83,9 +121,7 @@ function update(data) {
 	.range([HEIGHT, 0])
 
 
-	const colorScale = d3.scaleOrdinal()
-	.domain(dataCurrentYear.map(d => d.country))
-	.range(d3.schemeSet3)
+
 
 	//X-Axis
 	const xAxisCall = d3.axisBottom(x) 
@@ -104,6 +140,11 @@ function update(data) {
 	.tickFormat(d => d + ' years')
 	yAxisGroup.call(yAxisCall)
 
+	
+	
+
+
+
 	const circles = g.selectAll("circle")
 	.data(dataCurrentYear, d => d.country)
 
@@ -111,7 +152,7 @@ function update(data) {
 
 	circles.attr("cx", d => x(d.income))
 	.attr("cy", d => y(d.life_exp) )
-	.attr("r", d => (Math.sqrt(d.population/Math.PI)/1000))
+	.attr("r", d => (Math.sqrt(d.population/Math.PI)/500))
 	
 
 	circles.enter().append("circle")
@@ -120,5 +161,11 @@ function update(data) {
 	.attr("r", d => (Math.sqrt(d.population/Math.PI)/1000 ))
 	.attr("fill",d => colorScale(d.continent))
 
+	if (currentYear < 2011) {
+		timeLabel.text(String(currentYear))
+	}
+	
 	console.log(currentYear)
+
+	
 }
